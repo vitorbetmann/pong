@@ -6,38 +6,83 @@
 #define V_WINDOW_WIDTH 432
 #define V_WINDOW_HEIGHT 243
 #define FONTSIZE 12
-// Prototypes
+
 // Variables
+RenderTexture2D vScreen;
+Font font;
+
+// Prototypes
+void GameInit();
+void GameRun();
+void DrawAll();
+void DrawOnVScreen();
+void DrawOnWindow();
+void GameUnload();
 
 int main(void)
 {
-    SetConfigFlags(FLAG_FULLSCREEN_MODE | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Pong");
-    RenderTexture2D vScreen = LoadRenderTexture(V_WINDOW_WIDTH, V_WINDOW_HEIGHT);
-    SetTargetFPS(60);
-    float scale = (float)WINDOW_WIDTH / V_WINDOW_WIDTH;
+    GameInit();
+    GameRun();
+    GameUnload();
+    return 0;
+}
 
+void GameInit()
+{
+    SetConfigFlags(
+        FLAG_FULLSCREEN_MODE |
+        FLAG_VSYNC_HINT |
+        FLAG_WINDOW_RESIZABLE);
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Pong");
+    vScreen = LoadRenderTexture(V_WINDOW_WIDTH, V_WINDOW_HEIGHT);
+    font = LoadFont("../assets/pong_font.ttf");
+    SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+    SetTargetFPS(60); // TODO: is this a good thing to use?
+}
+
+void GameRun()
+{
     while (!WindowShouldClose())
     {
-        char *greeting = "Hello Pong!";
-        int textWidth = MeasureText(greeting, FONTSIZE);
-        BeginTextureMode(vScreen);
-        ClearBackground(BLACK);
-        DrawText(greeting, (V_WINDOW_WIDTH - textWidth) / 2, (V_WINDOW_HEIGHT - FONTSIZE) / 2, FONTSIZE, WHITE);
-        EndTextureMode();
-
-        BeginDrawing();
-        DrawTexturePro(
-            vScreen.texture,
-            (Rectangle){0, 0, vScreen.texture.width, -vScreen.texture.height},
-            (Rectangle){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT},
-            (Vector2){0, 0},
-            0,
-            WHITE);
-        EndDrawing();
+        DrawAll();
     }
+}
 
+void DrawAll()
+{
+    DrawOnVScreen();
+    DrawOnWindow();
+}
+
+void DrawOnVScreen()
+{
+
+    char *greeting = "Hello Pong!";
+    Vector2 textWidth = MeasureTextEx(font, greeting, FONTSIZE, 2);
+    Vector2 textPosition = (Vector2){(V_WINDOW_WIDTH - textWidth.x) / 2,
+                                     (V_WINDOW_HEIGHT - textWidth.y) / 2};
+    BeginTextureMode(vScreen);
+    ClearBackground((Color){40, 45, 52, 255});
+    DrawTextEx(font, greeting, textPosition, FONTSIZE, 2, WHITE);
+    EndTextureMode();
+}
+
+void DrawOnWindow()
+{
+    BeginDrawing();
+    DrawTexturePro(
+        vScreen.texture,
+        (Rectangle){0, 0, vScreen.texture.width, -vScreen.texture.height},
+        (Rectangle){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT},
+        (Vector2){0, 0},
+        0,
+        WHITE);
+    EndDrawing();
+}
+
+void GameUnload()
+{
     UnloadRenderTexture(vScreen);
+    UnloadFont(font);
     CloseWindow();
-    return 0;
 }
