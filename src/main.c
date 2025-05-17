@@ -14,10 +14,6 @@
 RenderTexture2D vScreen;
 Font font;
 
-// Variables
-RenderTexture2D vScreen;
-Font font;
-
 // Prototypes
 void GameInit();
 void GameRun();
@@ -90,7 +86,6 @@ void DrawOnWindow()
 void GameUnload()
 {
     UnloadRenderTexture(vScreen);
-    UnloadFont(font);
     UnloadFont(font);
     CloseWindow();
 }
