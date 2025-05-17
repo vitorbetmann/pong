@@ -1,3 +1,6 @@
+// TODO: Draw Paddles and Ball
+// TODO: Line 43: Is SetTargetFPS() a good thing to use?
+
 #include <raylib.h>
 
 // Defines
@@ -6,6 +9,10 @@
 #define V_WINDOW_WIDTH 432
 #define V_WINDOW_HEIGHT 243
 #define FONTSIZE 12
+
+// Variables
+RenderTexture2D vScreen;
+Font font;
 
 // Variables
 RenderTexture2D vScreen;
@@ -37,7 +44,7 @@ void GameInit()
     vScreen = LoadRenderTexture(V_WINDOW_WIDTH, V_WINDOW_HEIGHT);
     font = LoadFont("../assets/pong_font.ttf");
     SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
-    SetTargetFPS(60); // TODO: is this a good thing to use?
+    SetTargetFPS(60);
 }
 
 void GameRun()
@@ -83,6 +90,7 @@ void DrawOnWindow()
 void GameUnload()
 {
     UnloadRenderTexture(vScreen);
+    UnloadFont(font);
     UnloadFont(font);
     CloseWindow();
 }
