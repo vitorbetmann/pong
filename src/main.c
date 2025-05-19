@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <stdio.h>
 
 // Defines
 #define WINDOW_WIDTH 1280
@@ -6,7 +7,9 @@
 #define TARGET_FPS 60
 #define V_WIDTH 432
 #define V_HEIGHT 243
-#define FONTSIZE 12
+#define GREETING_FONTSIZE 12
+#define MAX_SCORE_DIGITS_AMOUNT 1
+#define SCORE_FONTSIZE 32
 #define PADDLE_WIDTH 5
 #define PADDLE_HEIGHT 20
 #define PADDLE_SPEED 200
@@ -26,6 +29,7 @@ float dt;
 int p1Score, p2Score;
 int player1Y = 30, player2Y = V_HEIGHT - 50;
 const int PLAYER_1_X = 10, PLAYER_2_X = V_WIDTH - 10;
+Color const BACKGROUND = {40, 45, 52, 255};
 
 // Prototypes
 void GameInit();
@@ -34,6 +38,7 @@ void UpdateAll();
 void UpdatePaddle(PlayerNumber playerNum);
 void UpdateBall();
 void DrawAll();
+void DrawScore();
 void DrawOnVScreen();
 void DrawPaddle(int posX, int posY);
 void DrawBall();
@@ -112,11 +117,21 @@ void DrawAll()
 void DrawOnVScreen()
 {
     BeginTextureMode(vScreen);
+    DrawScore();
     DrawPaddle(PLAYER_1_X, player1Y);
     DrawPaddle(PLAYER_2_X, player2Y);
     DrawBall();
     DrawGreeting();
     EndTextureMode();
+}
+
+void DrawScore()
+{
+    char buffer[MAX_SCORE_DIGITS_AMOUNT + 1]; // +1 for '\0'
+    sprintf(buffer, "%d", p1Score);
+    DrawText(buffer, V_WIDTH / 2 - 50, V_HEIGHT / 3, SCORE_FONTSIZE, WHITE);
+    sprintf(buffer, "%d", p2Score);
+    DrawText(buffer, V_WIDTH / 2 + 30, V_HEIGHT / 3, SCORE_FONTSIZE, WHITE);
 }
 
 void DrawPaddle(int posX, int posY)
@@ -132,11 +147,11 @@ void DrawBall()
 void DrawGreeting()
 {
     char *greeting = "Hello Pong!";
-    Vector2 textWidth = MeasureTextEx(font, greeting, FONTSIZE, 2);
-    Vector2 textPosition = (Vector2){(V_WIDTH - textWidth.x) / 2,
-                                     (V_HEIGHT - textWidth.y) * 0.06f};
-    ClearBackground((Color){40, 45, 52, 255});
-    DrawTextEx(font, greeting, textPosition, FONTSIZE, 2, WHITE);
+    Vector2 textSize = MeasureTextEx(font, greeting, GREETING_FONTSIZE, 2);
+    Vector2 textPosition = (Vector2){(V_WIDTH - textSize.x) / 2,
+                                     (V_HEIGHT - textSize.y) * 0.06f};
+    ClearBackground(BACKGROUND);
+    DrawTextEx(font, greeting, textPosition, GREETING_FONTSIZE, 2, WHITE);
 }
 
 void DrawOnWindow()
