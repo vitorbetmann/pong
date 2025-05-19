@@ -46,6 +46,7 @@ void DrawGreeting();
 void DrawOnWindow();
 void GameUnload();
 
+// Main
 int main(void)
 {
     GameInit();
