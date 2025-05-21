@@ -1,8 +1,7 @@
 #define _DEFAULT_SOURCE
+#include "Ball.h"
 #include <raylib.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
 // Defines
 #define WINDOW_WIDTH 1280
@@ -16,9 +15,6 @@
 #define PADDLE_WIDTH 5
 #define PADDLE_HEIGHT 20
 #define PADDLE_SPEED 200
-#define BALLSIZE 4
-#define BALL_X_SPEED 100
-#define BALL_Y_SPEED_MAX 50
 
 // Data Types
 typedef enum
@@ -33,29 +29,25 @@ typedef enum
 } PlayerNumber;
 
 // Variables
+GameState gameState = PLAY;
+Ball ball;
 RenderTexture2D vScreen;
 Font font;
 float dt;
 int p1Score, p2Score;
 int player1Y = 30, player2Y = V_HEIGHT - 50;
 const int PLAYER_1_X = 10, PLAYER_2_X = V_WIDTH - 10;
-float ballX, ballY, ballDX, ballDY;
 Color const BACKGROUND = {40, 45, 52, 255};
-GameState gameState = START;
 
 // Prototypes
 void GameInit();
 void GameRun();
 void UpdateAll();
 void UpdatePaddle(PlayerNumber playerNum);
-void UpdateBall();
 void DrawAll();
 void DrawScore();
 void DrawOnVScreen();
 void DrawPaddle(int posX, int posY);
-void DrawBall();
-void ResetBall();
-void SetYSpeed();
 void DrawGreeting();
 void DrawOnWindow();
 void GameUnload();
@@ -81,7 +73,7 @@ void GameInit()
     font = LoadFont("../assets/pong_font.ttf");
     SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
     SetTargetFPS(TARGET_FPS);
-    ResetBall();
+    ResetBall(&ball, V_WIDTH, V_HEIGHT);
 }
 
 void GameRun()
@@ -107,7 +99,7 @@ void UpdateAll()
     dt = GetFrameTime();
     UpdatePaddle(PLAYER_1);
     UpdatePaddle(PLAYER_2);
-    UpdateBall();
+    UpdateBall(&ball, dt);
 }
 
 void UpdatePaddle(PlayerNumber playerNum)
@@ -143,34 +135,6 @@ void UpdatePaddle(PlayerNumber playerNum)
     }
 }
 
-void UpdateBall()
-{
-    switch (gameState)
-    {
-    case START:
-        return;
-    case PLAY:
-        ballX += ballDX * dt;
-        ballY += ballDY * dt;
-        return;
-    }
-}
-
-void ResetBall()
-{
-    srandom(time(NULL));
-    ballX = (V_WIDTH - BALLSIZE) / 2;
-    ballY = (V_HEIGHT - BALLSIZE) / 2;
-    ballDX = random() % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
-    SetYSpeed();
-}
-
-void SetYSpeed()
-{
-    int speed = random() / ((double)RAND_MAX + 1) * (BALL_Y_SPEED_MAX + 1);
-    ballDY = (random() % 2 == 0) ? speed : speed;
-}
-
 void DrawAll()
 {
     DrawOnVScreen();
@@ -183,7 +147,7 @@ void DrawOnVScreen()
     DrawScore();
     DrawPaddle(PLAYER_1_X, player1Y);
     DrawPaddle(PLAYER_2_X, player2Y);
-    DrawBall();
+    DrawBall(&ball);
     DrawGreeting();
     EndTextureMode();
 }
@@ -200,11 +164,6 @@ void DrawScore()
 void DrawPaddle(int posX, int posY)
 {
     DrawRectangle(posX, posY, PADDLE_WIDTH, PADDLE_HEIGHT, WHITE);
-}
-
-void DrawBall()
-{
-    DrawRectangle(ballX, ballY, BALLSIZE, BALLSIZE, WHITE);
 }
 
 void DrawGreeting()
