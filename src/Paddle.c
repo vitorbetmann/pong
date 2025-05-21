@@ -1,11 +1,5 @@
 #include "Paddle.h"
 
-void PaddleInit(Paddle *paddle, float startingX, float startingY)
-{
-    paddle->x = startingX;
-    paddle->y = startingY;
-}
-
 void PaddleMoveUp(Paddle *paddle, float dt)
 {
     int newPos = paddle->y - PADDLE_SPEED * dt;

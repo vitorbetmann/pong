@@ -20,7 +20,8 @@ typedef enum
 // Variables
 GameState gameState;
 Ball ball;
-Paddle paddle1, paddle2;
+Paddle paddle1 = {.x = 10, .y = 30};
+Paddle paddle2 = {.x = V_WIDTH - 10, .y = V_HEIGHT - 50};
 RenderTexture2D vScreen;
 Font font;
 float dt;
@@ -62,8 +63,6 @@ void GameInit()
     SetTargetFPS(TARGET_FPS);
 
     BallReset(&ball);
-    PaddleInit(&paddle1, 10, 30);
-    PaddleInit(&paddle2, V_WIDTH - 10, V_HEIGHT - 50);
     gameState = START;
 }
 

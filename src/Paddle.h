@@ -14,12 +14,11 @@
 // Data Types
 typedef struct
 {
-    float x;
+    const float x;
     float y;
 } Paddle;
 
 // Prototypes
-void PaddleInit(Paddle *paddle, float startingX, float startingY);
 void PaddleMoveUp(Paddle *paddle, float dt);
 void PaddleMoveDown(Paddle *paddle, float dt);
 void PaddleDraw(Paddle *paddle);
