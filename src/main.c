@@ -1,20 +1,9 @@
 #define _DEFAULT_SOURCE
 #include "Ball.h"
+#include "Paddle.h"
+#include "Settings.h"
 #include <raylib.h>
 #include <stdio.h>
-
-// Defines
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 720
-#define TARGET_FPS 60
-#define V_WIDTH 432
-#define V_HEIGHT 243
-#define GREETING_FONTSIZE 12
-#define MAX_SCORE_DIGITS_AMOUNT 1
-#define SCORE_FONTSIZE 32
-#define PADDLE_WIDTH 5
-#define PADDLE_HEIGHT 20
-#define PADDLE_SPEED 200
 
 // Data Types
 typedef enum
@@ -29,26 +18,24 @@ typedef enum
 } PlayerNumber;
 
 // Variables
-GameState gameState = PLAY;
+GameState gameState;
 Ball ball;
+Paddle paddle1, paddle2;
 RenderTexture2D vScreen;
 Font font;
 float dt;
 int p1Score, p2Score;
-int player1Y = 30, player2Y = V_HEIGHT - 50;
-const int PLAYER_1_X = 10, PLAYER_2_X = V_WIDTH - 10;
 Color const BACKGROUND = {40, 45, 52, 255};
 
 // Prototypes
 void GameInit();
 void GameRun();
 void UpdateAll();
-void UpdatePaddle(PlayerNumber playerNum);
+void GetInput();
 void DrawAll();
-void DrawScore();
+void ScoreDraw();
 void DrawOnVScreen();
-void DrawPaddle(int posX, int posY);
-void DrawGreeting();
+void GreetingDraw();
 void DrawOnWindow();
 void GameUnload();
 
@@ -73,7 +60,11 @@ void GameInit()
     font = LoadFont("../assets/pong_font.ttf");
     SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
     SetTargetFPS(TARGET_FPS);
-    ResetBall(&ball, V_WIDTH, V_HEIGHT);
+
+    BallReset(&ball);
+    PaddleInit(&paddle1, 10, 30);
+    PaddleInit(&paddle2, V_WIDTH - 10, V_HEIGHT - 50);
+    gameState = START;
 }
 
 void GameRun()
@@ -97,41 +88,27 @@ void GameRun()
 void UpdateAll()
 {
     dt = GetFrameTime();
-    UpdatePaddle(PLAYER_1);
-    UpdatePaddle(PLAYER_2);
-    UpdateBall(&ball, dt);
+    GetInput();
+    BallUpdate(&ball, dt);
 }
 
-void UpdatePaddle(PlayerNumber playerNum)
+void GetInput()
 {
-    switch (playerNum)
+    if (IsKeyDown(KEY_W))
     {
-    case PLAYER_1:
-        if (IsKeyDown(KEY_W))
-        {
-            int newPos = player1Y - PADDLE_SPEED * dt;
-            player1Y = newPos < 0 ? 0 : newPos;
-        }
-        else if (IsKeyDown(KEY_S))
-        {
-            int newPos = player1Y + PADDLE_SPEED * dt;
-            int lowerWindowLimit = V_HEIGHT - PADDLE_HEIGHT;
-            player1Y = newPos > lowerWindowLimit ? lowerWindowLimit : newPos;
-        }
-        return;
-    case PLAYER_2:
-        if (IsKeyDown(KEY_UP))
-        {
-            int newPos = player2Y - PADDLE_SPEED * dt;
-            player2Y = newPos < 0 ? 0 : newPos;
-        }
-        else if (IsKeyDown(KEY_DOWN))
-        {
-            int newPos = player2Y + PADDLE_SPEED * dt;
-            int lowerWindowLimit = V_HEIGHT - PADDLE_HEIGHT;
-            player2Y = newPos > lowerWindowLimit ? lowerWindowLimit : newPos;
-        }
-        return;
+        PaddleMoveUp(&paddle1, dt);
+    }
+    else if (IsKeyDown(KEY_S))
+    {
+        PaddleMoveDown(&paddle1, dt);
+    }
+    if (IsKeyDown(KEY_UP))
+    {
+        PaddleMoveUp(&paddle2, dt);
+    }
+    else if (IsKeyDown(KEY_DOWN))
+    {
+        PaddleMoveDown(&paddle2, dt);
     }
 }
 
@@ -144,15 +121,15 @@ void DrawAll()
 void DrawOnVScreen()
 {
     BeginTextureMode(vScreen);
-    DrawScore();
-    DrawPaddle(PLAYER_1_X, player1Y);
-    DrawPaddle(PLAYER_2_X, player2Y);
-    DrawBall(&ball);
-    DrawGreeting();
+    ScoreDraw();
+    PaddleDraw(&paddle1);
+    PaddleDraw(&paddle2);
+    BallDraw(&ball);
+    GreetingDraw();
     EndTextureMode();
 }
 
-void DrawScore()
+void ScoreDraw()
 {
     char buffer[MAX_SCORE_DIGITS_AMOUNT + 1]; // +1 for '\0'
     sprintf(buffer, "%d", p1Score);
@@ -161,12 +138,7 @@ void DrawScore()
     DrawText(buffer, V_WIDTH / 2 + 30, V_HEIGHT / 3, SCORE_FONTSIZE, WHITE);
 }
 
-void DrawPaddle(int posX, int posY)
-{
-    DrawRectangle(posX, posY, PADDLE_WIDTH, PADDLE_HEIGHT, WHITE);
-}
-
-void DrawGreeting()
+void GreetingDraw()
 {
     char *greeting = "Hello Pong!";
     Vector2 textSize = MeasureTextEx(font, greeting, GREETING_FONTSIZE, 2);

@@ -2,6 +2,7 @@
 #define BALL_H
 
 // Includes
+#include "Settings.h"
 #include <raylib.h>
 #include <stdlib.h>
 #include <time.h>
@@ -14,15 +15,15 @@
 // Ball Struct
 typedef struct
 {
-    float xPos;
-    float yPos;
+    float x;
+    float y;
     float xSpeed;
     float ySpeed;
 } Ball;
 
 // Prototypes
-void UpdateBall(Ball *ball, float dt);
-void DrawBall(Ball *ball);
-void ResetBall(Ball *ball, int WindowWidth, int WindowHeight);
-void SetBallYSpeed(Ball *ball);
+void BallUpdate(Ball *ball, float dt);
+void BallDraw(Ball *ball);
+void BallReset(Ball *ball);
+void BallSetYSpeed(Ball *ball);
 #endif
