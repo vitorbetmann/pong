@@ -1,5 +1,8 @@
+#define _DEFAULT_SOURCE
 #include <raylib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 // Defines
 #define WINDOW_WIDTH 1280
@@ -14,8 +17,15 @@
 #define PADDLE_HEIGHT 20
 #define PADDLE_SPEED 200
 #define BALLSIZE 4
+#define BALL_X_SPEED 100
+#define BALL_Y_SPEED_MAX 50
 
 // Data Types
+typedef enum
+{
+    START,
+    PLAY,
+} GameState;
 typedef enum
 {
     PLAYER_1,
@@ -29,7 +39,9 @@ float dt;
 int p1Score, p2Score;
 int player1Y = 30, player2Y = V_HEIGHT - 50;
 const int PLAYER_1_X = 10, PLAYER_2_X = V_WIDTH - 10;
+float ballX, ballY, ballDX, ballDY;
 Color const BACKGROUND = {40, 45, 52, 255};
+GameState gameState = START;
 
 // Prototypes
 void GameInit();
@@ -42,6 +54,8 @@ void DrawScore();
 void DrawOnVScreen();
 void DrawPaddle(int posX, int posY);
 void DrawBall();
+void ResetBall();
+void SetYSpeed();
 void DrawGreeting();
 void DrawOnWindow();
 void GameUnload();
@@ -67,13 +81,23 @@ void GameInit()
     font = LoadFont("../assets/pong_font.ttf");
     SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
     SetTargetFPS(TARGET_FPS);
+    ResetBall();
 }
 
 void GameRun()
 {
     while (!WindowShouldClose())
     {
-        UpdateAll();
+        switch (gameState)
+        {
+        case START:
+            if (IsKeyDown(KEY_ENTER))
+                gameState = PLAY;
+            break;
+        case PLAY:
+            UpdateAll();
+            break;
+        }
         DrawAll();
     }
 }
@@ -92,21 +116,59 @@ void UpdatePaddle(PlayerNumber playerNum)
     {
     case PLAYER_1:
         if (IsKeyDown(KEY_W))
-            player1Y -= PADDLE_SPEED * dt;
+        {
+            int newPos = player1Y - PADDLE_SPEED * dt;
+            player1Y = newPos < 0 ? 0 : newPos;
+        }
         else if (IsKeyDown(KEY_S))
-            player1Y += PADDLE_SPEED * dt;
+        {
+            int newPos = player1Y + PADDLE_SPEED * dt;
+            int lowerWindowLimit = V_HEIGHT - PADDLE_HEIGHT;
+            player1Y = newPos > lowerWindowLimit ? lowerWindowLimit : newPos;
+        }
         return;
     case PLAYER_2:
         if (IsKeyDown(KEY_UP))
-            player2Y -= PADDLE_SPEED * dt;
+        {
+            int newPos = player2Y - PADDLE_SPEED * dt;
+            player2Y = newPos < 0 ? 0 : newPos;
+        }
         else if (IsKeyDown(KEY_DOWN))
-            player2Y += PADDLE_SPEED * dt;
+        {
+            int newPos = player2Y + PADDLE_SPEED * dt;
+            int lowerWindowLimit = V_HEIGHT - PADDLE_HEIGHT;
+            player2Y = newPos > lowerWindowLimit ? lowerWindowLimit : newPos;
+        }
         return;
     }
 }
 
 void UpdateBall()
 {
+    switch (gameState)
+    {
+    case START:
+        return;
+    case PLAY:
+        ballX += ballDX * dt;
+        ballY += ballDY * dt;
+        return;
+    }
+}
+
+void ResetBall()
+{
+    srandom(time(NULL));
+    ballX = (V_WIDTH - BALLSIZE) / 2;
+    ballY = (V_HEIGHT - BALLSIZE) / 2;
+    ballDX = random() % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
+    SetYSpeed();
+}
+
+void SetYSpeed()
+{
+    int speed = random() / ((double)RAND_MAX + 1) * (BALL_Y_SPEED_MAX + 1);
+    ballDY = (random() % 2 == 0) ? speed : speed;
 }
 
 void DrawAll()
@@ -142,7 +204,7 @@ void DrawPaddle(int posX, int posY)
 
 void DrawBall()
 {
-    DrawRectangle((V_WIDTH - BALLSIZE) / 2, (V_HEIGHT - BALLSIZE) / 2, BALLSIZE, BALLSIZE, WHITE);
+    DrawRectangle(ballX, ballY, BALLSIZE, BALLSIZE, WHITE);
 }
 
 void DrawGreeting()
