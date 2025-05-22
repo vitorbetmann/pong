@@ -2,20 +2,15 @@
 #define PADDLE_H
 #define _DEFAULT_SOURCE
 
-// Includes
-#include "Settings.h"
-#include <raylib.h>
-
 // Defines
 #define PADDLE_WIDTH 5
 #define PADDLE_HEIGHT 20
 #define PADDLE_SPEED 200
 
 // Data Types
-typedef struct
-{
-    const float x;
-    float y;
+typedef struct {
+  const float x;
+  float y;
 } Paddle;
 
 // Prototypes

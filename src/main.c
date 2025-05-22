@@ -1,4 +1,3 @@
-#define _DEFAULT_SOURCE
 #include "Ball.h"
 #include "Paddle.h"
 #include "Settings.h"
