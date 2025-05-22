@@ -1,6 +1,5 @@
 #ifndef PADDLE_H
 #define PADDLE_H
-#define _DEFAULT_SOURCE
 
 // Defines
 #define PADDLE_WIDTH 5
@@ -9,8 +8,8 @@
 
 // Data Types
 typedef struct {
-  const float x;
-  float y;
+  float left;
+  float top;
 } Paddle;
 
 // Prototypes

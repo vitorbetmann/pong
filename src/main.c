@@ -17,8 +17,8 @@ typedef enum {
 // Variables
 GameState gameState;
 Ball ball;
-Paddle paddle1 = {.x = 10, .y = 30};
-Paddle paddle2 = {.x = V_WIDTH - 10, .y = V_HEIGHT - 50};
+Paddle paddle1 = {10, 30};
+Paddle paddle2 = {V_WIDTH - 30, V_HEIGHT - 50};
 RenderTexture2D vScreen;
 Font font;
 float dt;
@@ -29,8 +29,9 @@ bool canDrawFPS = false;
 // Prototypes
 void GameInit();
 void GameRun();
-void UpdateAll();
 void GetInput();
+void UpdateAll();
+bool hasCollided(Paddle paddle);
 void DrawAll();
 void ScoreDraw();
 void ToggleFPS();
@@ -57,22 +58,16 @@ void GameInit() {
   font = LoadFont("../assets/pong_font.ttf");
   SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
   HideCursor();
-  // SetTargetFPS(TARGET_FPS);
-
+  SetTargetFPS(TARGET_FPS);
   BallReset(&ball);
   gameState = START;
 }
 
 void GameRun() {
   while (!WindowShouldClose()) {
-    switch (gameState) {
-    case START:
-      if (IsKeyDown(KEY_ENTER))
-        gameState = PLAY;
-      break;
-    case PLAY:
+    GetInput();
+    if (gameState == PLAY) {
       UpdateAll();
-      break;
     }
     DrawAll();
   }
@@ -80,11 +75,33 @@ void GameRun() {
 
 void UpdateAll() {
   dt = GetFrameTime();
-  GetInput();
   BallUpdate(&ball, dt);
+
+  if (hasCollided(paddle1)) {
+    ball.left = paddle1.left + PADDLE_WIDTH;
+    BallInvertXSpeed(&ball);
+  } else if (hasCollided(paddle2)) {
+    ball.left = paddle2.left - BALLSIZE;
+    BallInvertXSpeed(&ball);
+  }
+
+  CheckBallHitBoundaries(&ball);
 }
 
 void GetInput() {
+  switch (gameState) {
+  case START:
+    if (IsKeyPressed(KEY_ENTER)) {
+      gameState = PLAY;
+    }
+    break;
+  case PLAY:
+    if (IsKeyPressed(KEY_ENTER)) {
+      BallReset(&ball);
+      gameState = START;
+    }
+    break;
+  }
   if (IsKeyPressed(KEY_F)) {
     ToggleFPS();
   }
@@ -98,6 +115,13 @@ void GetInput() {
   } else if (IsKeyDown(KEY_DOWN)) {
     PaddleMoveDown(&paddle2, dt);
   }
+}
+
+bool hasCollided(Paddle paddle) {
+  return paddle.left < ball.left + BALLSIZE &&
+         paddle.left + PADDLE_WIDTH > ball.left &&
+         paddle.top < ball.top + BALLSIZE &&
+         paddle.top + PADDLE_HEIGHT > ball.top;
 }
 
 void ToggleFPS() { canDrawFPS = !canDrawFPS; }
