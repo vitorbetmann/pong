@@ -1,5 +1,5 @@
 #include "Ball.h"
-#include "Paddle.h"
+#include "Player.h"
 #include "Settings.h"
 #include <raylib.h>
 #include <stdio.h>
@@ -8,33 +8,28 @@
 typedef enum {
   START,
   PLAY,
+  SERVE,
 } GameState;
-typedef enum {
-  PLAYER_1,
-  PLAYER_2,
-} PlayerNumber;
 
 // Variables
+Player player1, player2;
 GameState gameState;
 Ball ball;
-Paddle paddle1 = {10, 30};
-Paddle paddle2 = {V_WIDTH - 30, V_HEIGHT - 50};
 RenderTexture2D vScreen;
 Font font;
 float dt;
-int p1Score, p2Score;
-Color const BACKGROUND = {40, 45, 52, 255};
 bool canDrawFPS = false;
+Color const BACKGROUND = {40, 45, 52, 255};
 
 // Prototypes
 void GameInit();
 void GameRun();
-void GetInput();
+void CheckChangeGameState();
 void UpdateAll();
 bool hasCollided(Paddle paddle);
 void DrawAll();
 void ScoreDraw();
-void ToggleFPS();
+void CheckToggleFPS();
 void DisplayFPS();
 void DrawOnVScreen();
 void GreetingDraw();
@@ -59,36 +54,67 @@ void GameInit() {
   SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
   HideCursor();
   SetTargetFPS(TARGET_FPS);
+
+  player1 = NewPlayer(10, 30);
+  player2 = NewPlayer(V_WIDTH - 30, V_HEIGHT - 50);
   BallReset(&ball);
   gameState = START;
 }
 
 void GameRun() {
   while (!WindowShouldClose()) {
-    GetInput();
-    if (gameState == PLAY) {
-      UpdateAll();
-    }
+    CheckChangeGameState();
+    UpdateAll();
     DrawAll();
   }
 }
 
 void UpdateAll() {
   dt = GetFrameTime();
-  BallUpdate(&ball, dt);
+  CheckToggleFPS();
 
-  if (hasCollided(paddle1)) {
-    ball.left = paddle1.left + PADDLE_WIDTH;
-    BallInvertXSpeed(&ball);
-  } else if (hasCollided(paddle2)) {
-    ball.left = paddle2.left - BALLSIZE;
-    BallInvertXSpeed(&ball);
+  switch (gameState) {
+  case START:
+    break;
+  case PLAY:
+    BallUpdate(&ball, dt);
+
+    if (hasCollided(player1.paddle)) {
+      ball.left = player1.paddle.left + PADDLE_WIDTH;
+      BallInvertXSpeed(&ball);
+    } else if (hasCollided(player2.paddle)) {
+      ball.left = player2.paddle.left - BALLSIZE;
+      BallInvertXSpeed(&ball);
+    }
+
+    if (ball.left > V_WIDTH) {
+      Score(&player1);
+      BallReset(&ball);
+    } else if (ball.left + BALLSIZE < 0) {
+      Score(&player2);
+      BallReset(&ball);
+    }
+
+    CheckBallHitBoundaries(&ball);
+
+    break;
+  case SERVE:
+    break;
   }
 
-  CheckBallHitBoundaries(&ball);
+  if (IsKeyDown(KEY_W)) {
+    PaddleMoveUp(&player1.paddle, dt);
+  } else if (IsKeyDown(KEY_S)) {
+    PaddleMoveDown(&player1.paddle, dt);
+  }
+  if (IsKeyDown(KEY_UP)) {
+    PaddleMoveUp(&player2.paddle, dt);
+  } else if (IsKeyDown(KEY_DOWN)) {
+    PaddleMoveDown(&player2.paddle, dt);
+  }
 }
 
-void GetInput() {
+void CheckChangeGameState() {
   switch (gameState) {
   case START:
     if (IsKeyPressed(KEY_ENTER)) {
@@ -101,19 +127,8 @@ void GetInput() {
       gameState = START;
     }
     break;
-  }
-  if (IsKeyPressed(KEY_F)) {
-    ToggleFPS();
-  }
-  if (IsKeyDown(KEY_W)) {
-    PaddleMoveUp(&paddle1, dt);
-  } else if (IsKeyDown(KEY_S)) {
-    PaddleMoveDown(&paddle1, dt);
-  }
-  if (IsKeyDown(KEY_UP)) {
-    PaddleMoveUp(&paddle2, dt);
-  } else if (IsKeyDown(KEY_DOWN)) {
-    PaddleMoveDown(&paddle2, dt);
+  case SERVE:
+    break;
   }
 }
 
@@ -124,7 +139,11 @@ bool hasCollided(Paddle paddle) {
          paddle.top + PADDLE_HEIGHT > ball.top;
 }
 
-void ToggleFPS() { canDrawFPS = !canDrawFPS; }
+void CheckToggleFPS() {
+  if (IsKeyPressed(KEY_F)) {
+    canDrawFPS = !canDrawFPS;
+  }
+}
 
 void DisplayFPS() {
   if (canDrawFPS) {
@@ -141,8 +160,8 @@ void DrawOnVScreen() {
   BeginTextureMode(vScreen);
   DisplayFPS();
   ScoreDraw();
-  PaddleDraw(&paddle1);
-  PaddleDraw(&paddle2);
+  PaddleDraw(&player1.paddle);
+  PaddleDraw(&player2.paddle);
   BallDraw(&ball);
   GreetingDraw();
   EndTextureMode();
@@ -150,9 +169,9 @@ void DrawOnVScreen() {
 
 void ScoreDraw() {
   char buffer[MAX_SCORE_DIGITS_AMOUNT + 1]; // +1 for '\0'
-  sprintf(buffer, "%d", p1Score);
+  sprintf(buffer, "%d", player1.score);
   DrawText(buffer, V_WIDTH / 2 - 50, V_HEIGHT / 3, SCORE_FONTSIZE, WHITE);
-  sprintf(buffer, "%d", p2Score);
+  sprintf(buffer, "%d", player2.score);
   DrawText(buffer, V_WIDTH / 2 + 30, V_HEIGHT / 3, SCORE_FONTSIZE, WHITE);
 }
 
