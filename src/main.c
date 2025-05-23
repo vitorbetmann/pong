@@ -1,6 +1,7 @@
 #include "Ball.h"
 #include "Player.h"
 #include "Settings.h"
+#include <math.h>
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,6 +92,9 @@ void GameRun() {
 void UpdateAll() {
   dt = GetFrameTime();
   CheckToggleFPS();
+  if (IsKeyPressed(KEY_F)) {
+    ToggleFullscreen();
+  }
 
   switch (gameState) {
   case START:
@@ -203,7 +207,7 @@ bool hasCollided(Paddle paddle) {
 }
 
 void CheckToggleFPS() {
-  if (IsKeyPressed(KEY_F)) {
+  if (IsKeyPressed(KEY_P)) {
     canDrawFPS = !canDrawFPS;
   }
 }
@@ -290,11 +294,23 @@ void PauseDraw() {
 
 void DrawOnWindow() {
   BeginDrawing();
-  DrawTexturePro(
-      vScreen.texture,
-      (Rectangle){0, 0, vScreen.texture.width, -vScreen.texture.height},
-      (Rectangle){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT}, (Vector2){0, 0}, 0,
-      WHITE);
+  ClearBackground(BLACK);
+
+  int screenWidth = GetScreenWidth();
+  int screenHeight = GetScreenHeight();
+
+  float scale =
+      fminf((float)screenWidth / V_WIDTH, (float)screenHeight / V_HEIGHT);
+  int scaledWidth = V_WIDTH * scale;
+  int scaledHeight = V_HEIGHT * scale;
+
+  int offsetX = (screenWidth - scaledWidth) / 2;
+  int offsetY = (screenHeight - scaledHeight) / 2;
+
+  Rectangle source = {0, 0, V_WIDTH, -V_HEIGHT};
+  Rectangle dest = {offsetX, offsetY, scaledWidth, scaledHeight};
+
+  DrawTexturePro(vScreen.texture, source, dest, (Vector2){0, 0}, 0, WHITE);
   EndDrawing();
 }
 
