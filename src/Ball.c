@@ -4,7 +4,7 @@
 
 Ball NewBall() {
   Ball newBall;
-  newBall.xSpeed = GetRandomValue(0, 1) % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
+  BallSetXSpeedRandom(&newBall);
   BallReset(&newBall);
   return newBall;
 }
@@ -22,8 +22,9 @@ void BallReset(Ball *ball) {
   BallSetYSpeedRandom(ball, false);
   ball->left = (V_WIDTH - BALLSIZE) / 2.0;
   ball->top = (V_HEIGHT - BALLSIZE) / 2.0;
-  ball->xSpeed *= -1;
+  ball->xSpeed = (ball->xSpeed > 0 ? -1 : 1) * BALL_X_SPEED;
 }
+
 void CheckBallHitBoundaries(Ball *ball) {
   if (ball->top < 0) {
     ball->top = 0;
@@ -40,6 +41,10 @@ void BallInvertXSpeed(Ball *ball) {
 }
 
 void BallInvertYSpeed(Ball *ball) { ball->ySpeed *= -1; }
+
+void BallSetXSpeedRandom(Ball *ball) {
+  ball->xSpeed = GetRandomValue(0, 1) % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
+}
 
 void BallSetYSpeedRandom(Ball *ball, bool keepDirection) {
   float ogDir = ball->ySpeed;

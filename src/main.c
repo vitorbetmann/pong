@@ -8,11 +8,7 @@
 #include <time.h>
 
 // Data Types
-typedef enum {
-  START,
-  PLAY,
-  SERVE,
-} GameState;
+typedef enum { START, SERVE, PLAY, PAUSE, GAMEOVER } GameState;
 
 // Variables
 Player player1, player2;
@@ -25,7 +21,9 @@ bool canDrawFPS = false;
 Color const BACKGROUND = {40, 45, 52, 255};
 const char *const SERVING_TEXT =
     "\t\tPlayer %c's serve!\nPress Enter to serve!";
-Player servingPlayer;
+const char *const GAMEOVER_TEXT =
+    "\t\t\tPlayer %c WON!\nPress Enter to restart!";
+Player servingPlayer, winner;
 bool hasScored;
 
 // Prototypes
@@ -37,6 +35,9 @@ bool hasCollided(Paddle paddle);
 void DrawAll();
 void ScoreDraw();
 void ServingDraw();
+void PauseDraw();
+void GameOverDraw();
+
 void SetServingPlayer();
 void CheckToggleFPS();
 void DisplayFPS();
@@ -87,7 +88,7 @@ void UpdateAll() {
 
   switch (gameState) {
   case START:
-    break;
+  case PAUSE:
   case SERVE:
     break;
   case PLAY:
@@ -110,18 +111,20 @@ void UpdateAll() {
       hasScored = true;
     }
 
-    break;
-  }
+    if (IsKeyDown(KEY_W)) {
+      PaddleMoveUp(&player1.paddle, dt);
+    } else if (IsKeyDown(KEY_S)) {
+      PaddleMoveDown(&player1.paddle, dt);
+    }
+    if (IsKeyDown(KEY_UP)) {
+      PaddleMoveUp(&player2.paddle, dt);
+    } else if (IsKeyDown(KEY_DOWN)) {
+      PaddleMoveDown(&player2.paddle, dt);
+    }
 
-  if (IsKeyDown(KEY_W)) {
-    PaddleMoveUp(&player1.paddle, dt);
-  } else if (IsKeyDown(KEY_S)) {
-    PaddleMoveDown(&player1.paddle, dt);
-  }
-  if (IsKeyDown(KEY_UP)) {
-    PaddleMoveUp(&player2.paddle, dt);
-  } else if (IsKeyDown(KEY_DOWN)) {
-    PaddleMoveDown(&player2.paddle, dt);
+    break;
+  case GAMEOVER:
+    break;
   }
 }
 
@@ -139,7 +142,7 @@ void CheckChangeGameState() {
     break;
   case PLAY:
     if (IsKeyPressed(KEY_ENTER)) {
-      gameState = SERVE;
+      gameState = PAUSE;
     }
     if (hasScored) {
       BallReset(&ball);
@@ -148,7 +151,26 @@ void CheckChangeGameState() {
     } else {
       CheckBallHitBoundaries(&ball);
     }
+
+    if (player1.score == MAX_SCORE || player2.score == MAX_SCORE) {
+      winner = player1.score == 3 ? player1 : player2;
+      gameState = GAMEOVER;
+    }
     break;
+  case PAUSE:
+    if (IsKeyPressed(KEY_ENTER)) {
+      gameState = PLAY;
+    }
+    break;
+  case GAMEOVER:
+    if (IsKeyPressed(KEY_ENTER)) {
+      BallReset(&ball);
+      BallSetXSpeedRandom(&ball);
+      SetServingPlayer();
+      player1.score = 0;
+      player2.score = 0;
+      gameState = SERVE;
+    }
   }
 }
 
@@ -199,6 +221,12 @@ void DrawOnVScreen() {
   case SERVE:
     ServingDraw();
     break;
+  case PAUSE:
+    PauseDraw();
+    break;
+  case GAMEOVER:
+    GameOverDraw();
+    break;
   case PLAY:
     break;
   }
@@ -229,6 +257,24 @@ void ServingDraw() {
       (Vector2){(V_WIDTH - textSize.x) / 2, (V_HEIGHT - textSize.y) * 0.06f};
   DrawTextEx(font, buffer, textPosition, GREETING_FONTSIZE, 2, WHITE);
 }
+
+void GameOverDraw() {
+  char buffer[strlen(GAMEOVER_TEXT)];
+  snprintf(buffer, sizeof(buffer), GAMEOVER_TEXT, winner.number);
+  Vector2 textSize = MeasureTextEx(font, buffer, GREETING_FONTSIZE, 2);
+  Vector2 textPosition =
+      (Vector2){(V_WIDTH - textSize.x) / 2, (V_HEIGHT - textSize.y) * 0.06f};
+  DrawTextEx(font, buffer, textPosition, GREETING_FONTSIZE, 2, WHITE);
+}
+
+void PauseDraw() {
+  char *pauseText = "Game Paused";
+  Vector2 textSize = MeasureTextEx(font, pauseText, GREETING_FONTSIZE, 2);
+  Vector2 textPosition =
+      (Vector2){(V_WIDTH - textSize.x) / 2, (V_HEIGHT - textSize.y) * 0.06f};
+  DrawTextEx(font, pauseText, textPosition, GREETING_FONTSIZE, 2, WHITE);
+}
+
 void DrawOnWindow() {
   BeginDrawing();
   DrawTexturePro(

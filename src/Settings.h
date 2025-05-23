@@ -8,6 +8,7 @@
 #define V_WIDTH 432
 #define V_HEIGHT 243
 #define GREETING_FONTSIZE 12
+#define MAX_SCORE 3
 #define MAX_SCORE_DIGITS_AMOUNT 1
 #define SCORE_FONTSIZE 32
 
