@@ -3,6 +3,8 @@
 #include "Settings.h"
 #include <raylib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 // Data Types
@@ -21,6 +23,10 @@ Font font;
 float dt;
 bool canDrawFPS = false;
 Color const BACKGROUND = {40, 45, 52, 255};
+const char *const SERVING_TEXT =
+    "\t\tPlayer %c's serve!\nPress Enter to serve!";
+Player servingPlayer;
+bool hasScored;
 
 // Prototypes
 void GameInit();
@@ -30,6 +36,8 @@ void UpdateAll();
 bool hasCollided(Paddle paddle);
 void DrawAll();
 void ScoreDraw();
+void ServingDraw();
+void SetServingPlayer();
 void CheckToggleFPS();
 void DisplayFPS();
 void DrawOnVScreen();
@@ -57,9 +65,11 @@ void GameInit() {
   SetTargetFPS(TARGET_FPS);
   SetRandomSeed(time(NULL));
 
-  player1 = NewPlayer(10, 30);
-  player2 = NewPlayer(V_WIDTH - 30, V_HEIGHT - 50);
-  BallReset(&ball);
+  player1 = NewPlayer(10, 30, '1');
+  player2 = NewPlayer(V_WIDTH - 30, V_HEIGHT - 50, '2');
+  ball = NewBall();
+  SetServingPlayer();
+
   gameState = START;
 }
 
@@ -78,6 +88,8 @@ void UpdateAll() {
   switch (gameState) {
   case START:
     break;
+  case SERVE:
+    break;
   case PLAY:
     BallUpdate(&ball, dt);
 
@@ -89,18 +101,15 @@ void UpdateAll() {
       BallInvertXSpeed(&ball);
     }
 
+    hasScored = false;
     if (ball.left > V_WIDTH) {
       Score(&player1);
-      BallReset(&ball);
+      hasScored = true;
     } else if (ball.left + BALLSIZE < 0) {
       Score(&player2);
-      BallReset(&ball);
+      hasScored = true;
     }
 
-    CheckBallHitBoundaries(&ball);
-
-    break;
-  case SERVE:
     break;
   }
 
@@ -120,17 +129,34 @@ void CheckChangeGameState() {
   switch (gameState) {
   case START:
     if (IsKeyPressed(KEY_ENTER)) {
+      gameState = SERVE;
+    }
+    break;
+  case SERVE:
+    if (IsKeyPressed(KEY_ENTER)) {
       gameState = PLAY;
     }
     break;
   case PLAY:
     if (IsKeyPressed(KEY_ENTER)) {
+      gameState = SERVE;
+    }
+    if (hasScored) {
       BallReset(&ball);
-      gameState = START;
+      SetServingPlayer();
+      gameState = SERVE;
+    } else {
+      CheckBallHitBoundaries(&ball);
     }
     break;
-  case SERVE:
-    break;
+  }
+}
+
+void SetServingPlayer() {
+  if (ball.xSpeed > 0) {
+    servingPlayer = player1;
+  } else {
+    servingPlayer = player2;
   }
 }
 
@@ -160,32 +186,49 @@ void DrawAll() {
 
 void DrawOnVScreen() {
   BeginTextureMode(vScreen);
+  ClearBackground(BACKGROUND);
   DisplayFPS();
   ScoreDraw();
   PaddleDraw(&player1.paddle);
   PaddleDraw(&player2.paddle);
   BallDraw(&ball);
-  GreetingDraw();
+  switch (gameState) {
+  case START:
+    GreetingDraw();
+    break;
+  case SERVE:
+    ServingDraw();
+    break;
+  case PLAY:
+    break;
+  }
   EndTextureMode();
 }
 
 void ScoreDraw() {
-  char buffer[MAX_SCORE_DIGITS_AMOUNT + 1]; // +1 for '\0'
-  sprintf(buffer, "%d", player1.score);
+  char buffer[MAX_SCORE_DIGITS_AMOUNT + 1];
+  snprintf(buffer, sizeof(buffer), "%d", player1.score);
   DrawText(buffer, V_WIDTH / 2 - 50, V_HEIGHT / 3, SCORE_FONTSIZE, WHITE);
-  sprintf(buffer, "%d", player2.score);
+  snprintf(buffer, sizeof(buffer), "%d", player2.score);
   DrawText(buffer, V_WIDTH / 2 + 30, V_HEIGHT / 3, SCORE_FONTSIZE, WHITE);
 }
 
 void GreetingDraw() {
-  char *greeting = "Hello Pong!";
+  char *greeting = "\t\tWelcome to Pong!\nPress Enter to begin";
   Vector2 textSize = MeasureTextEx(font, greeting, GREETING_FONTSIZE, 2);
   Vector2 textPosition =
       (Vector2){(V_WIDTH - textSize.x) / 2, (V_HEIGHT - textSize.y) * 0.06f};
-  ClearBackground(BACKGROUND);
   DrawTextEx(font, greeting, textPosition, GREETING_FONTSIZE, 2, WHITE);
 }
 
+void ServingDraw() {
+  char buffer[strlen(SERVING_TEXT) + 1];
+  snprintf(buffer, sizeof(buffer), SERVING_TEXT, servingPlayer.number);
+  Vector2 textSize = MeasureTextEx(font, buffer, GREETING_FONTSIZE, 2);
+  Vector2 textPosition =
+      (Vector2){(V_WIDTH - textSize.x) / 2, (V_HEIGHT - textSize.y) * 0.06f};
+  DrawTextEx(font, buffer, textPosition, GREETING_FONTSIZE, 2, WHITE);
+}
 void DrawOnWindow() {
   BeginDrawing();
   DrawTexturePro(

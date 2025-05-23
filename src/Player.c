@@ -1,7 +1,7 @@
 #include "Player.h"
 
-Player NewPlayer(float left, float top) {
-  Player newPlayer = {.paddle = {left, top}};
+Player NewPlayer(float left, float top, char number) {
+  Player newPlayer = {.paddle = {left, top}, 0, number};
   return newPlayer;
 }
 

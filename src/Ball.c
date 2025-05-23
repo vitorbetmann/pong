@@ -2,6 +2,13 @@
 #include "Settings.h"
 #include <raylib.h>
 
+Ball NewBall() {
+  Ball newBall;
+  newBall.xSpeed = GetRandomValue(0, 1) % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
+  BallReset(&newBall);
+  return newBall;
+}
+
 void BallUpdate(Ball *ball, float dt) {
   ball->left += ball->xSpeed * dt;
   ball->top += ball->ySpeed * dt;
@@ -15,7 +22,7 @@ void BallReset(Ball *ball) {
   BallSetYSpeedRandom(ball, false);
   ball->left = (V_WIDTH - BALLSIZE) / 2.0;
   ball->top = (V_HEIGHT - BALLSIZE) / 2.0;
-  ball->xSpeed = GetRandomValue(0, 1) % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
+  ball->xSpeed *= -1;
 }
 void CheckBallHitBoundaries(Ball *ball) {
   if (ball->top < 0) {

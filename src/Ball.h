@@ -18,6 +18,7 @@ typedef struct {
 } Ball;
 
 // Prototypes
+Ball NewBall();
 void BallUpdate(Ball *ball, float dt);
 void BallDraw(Ball *ball);
 void BallReset(Ball *ball);
