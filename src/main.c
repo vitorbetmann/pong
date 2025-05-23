@@ -25,6 +25,7 @@ const char *const GAMEOVER_TEXT =
     "\t\t\tPlayer %c WON!\nPress Enter to restart!";
 Player servingPlayer, winner;
 bool hasScored;
+Sound paddleHit, score, wallHit;
 
 // Prototypes
 void GameInit();
@@ -66,6 +67,11 @@ void GameInit() {
   SetTargetFPS(TARGET_FPS);
   SetRandomSeed(time(NULL));
 
+  InitAudioDevice();
+  paddleHit = LoadSound("../assets/paddle_hit.wav");
+  score = LoadSound("../assets/score.wav");
+  wallHit = LoadSound("../assets/wall_hit.wav");
+
   player1 = NewPlayer(10, 30, '1');
   player2 = NewPlayer(V_WIDTH - 30, V_HEIGHT - 50, '2');
   ball = NewBall();
@@ -97,18 +103,23 @@ void UpdateAll() {
     if (hasCollided(player1.paddle)) {
       ball.left = player1.paddle.left + PADDLE_WIDTH;
       BallInvertXSpeed(&ball);
+      PlaySound(paddleHit);
     } else if (hasCollided(player2.paddle)) {
       ball.left = player2.paddle.left - BALLSIZE;
       BallInvertXSpeed(&ball);
+      PlaySound(paddleHit);
     }
 
     hasScored = false;
     if (ball.left > V_WIDTH) {
       Score(&player1);
       hasScored = true;
+      PlaySound(score);
+
     } else if (ball.left + BALLSIZE < 0) {
       Score(&player2);
       hasScored = true;
+      PlaySound(score);
     }
 
     if (IsKeyDown(KEY_W)) {
@@ -149,11 +160,13 @@ void CheckChangeGameState() {
       SetServingPlayer();
       gameState = SERVE;
     } else {
-      CheckBallHitBoundaries(&ball);
+      if (BallHitBoundaries(&ball)) {
+        PlaySound(wallHit);
+      }
     }
 
     if (player1.score == MAX_SCORE || player2.score == MAX_SCORE) {
-      winner = player1.score == 3 ? player1 : player2;
+      winner = player1.score == MAX_SCORE ? player1 : player2;
       gameState = GAMEOVER;
     }
     break;
@@ -288,5 +301,9 @@ void DrawOnWindow() {
 void GameUnload() {
   UnloadRenderTexture(vScreen);
   UnloadFont(font);
+  UnloadSound(paddleHit);
+  UnloadSound(score);
+  UnloadSound(wallHit);
+  CloseAudioDevice();
   CloseWindow();
 }

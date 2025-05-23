@@ -25,14 +25,17 @@ void BallReset(Ball *ball) {
   ball->xSpeed = (ball->xSpeed > 0 ? -1 : 1) * BALL_X_SPEED;
 }
 
-void CheckBallHitBoundaries(Ball *ball) {
+bool BallHitBoundaries(Ball *ball) {
   if (ball->top < 0) {
     ball->top = 0;
     BallInvertYSpeed(ball);
+    return true;
   } else if (ball->top + BALLSIZE > V_HEIGHT) {
     ball->top = V_HEIGHT - BALLSIZE;
     BallInvertYSpeed(ball);
+    return true;
   }
+  return false;
 }
 
 void BallInvertXSpeed(Ball *ball) {

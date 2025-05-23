@@ -26,5 +26,5 @@ void BallInvertXSpeed(Ball *ball);
 void BallInvertYSpeed(Ball *ball);
 void BallSetXSpeedRandom(Ball *ball);
 void BallSetYSpeedRandom(Ball *ball, bool keepDirection);
-void CheckBallHitBoundaries(Ball *ball);
+bool BallHitBoundaries(Ball *ball);
 #endif
