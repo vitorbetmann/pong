@@ -3,6 +3,7 @@
 #include "Settings.h"
 #include <raylib.h>
 #include <stdio.h>
+#include <time.h>
 
 // Data Types
 typedef enum {
@@ -54,6 +55,7 @@ void GameInit() {
   SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
   HideCursor();
   SetTargetFPS(TARGET_FPS);
+  SetRandomSeed(time(NULL));
 
   player1 = NewPlayer(10, 30);
   player2 = NewPlayer(V_WIDTH - 30, V_HEIGHT - 50);

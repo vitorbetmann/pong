@@ -1,8 +1,6 @@
 #include "Ball.h"
 #include "Settings.h"
 #include <raylib.h>
-#include <stdlib.h>
-#include <time.h>
 
 void BallUpdate(Ball *ball, float dt) {
   ball->left += ball->xSpeed * dt;
@@ -17,7 +15,7 @@ void BallReset(Ball *ball) {
   BallSetYSpeedRandom(ball, false);
   ball->left = (V_WIDTH - BALLSIZE) / 2.0;
   ball->top = (V_HEIGHT - BALLSIZE) / 2.0;
-  ball->xSpeed = random() % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
+  ball->xSpeed = GetRandomValue(0, 1) % 2 == 0 ? -BALL_X_SPEED : BALL_X_SPEED;
 }
 void CheckBallHitBoundaries(Ball *ball) {
   if (ball->top < 0) {
@@ -38,9 +36,8 @@ void BallInvertYSpeed(Ball *ball) { ball->ySpeed *= -1; }
 
 void BallSetYSpeedRandom(Ball *ball, bool keepDirection) {
   float ogDir = ball->ySpeed;
-  srandom(time(NULL));
-  int speed = random() / ((double)RAND_MAX + 1) * (BALL_Y_SPEED_MAX + 1);
-  ball->ySpeed = (random() % 2 == 0) ? -speed : speed;
+  int speed = GetRandomValue(0, BALL_Y_SPEED_MAX);
+  ball->ySpeed = (GetRandomValue(0, 1) % 2 == 0) ? -speed : speed;
   if (keepDirection && ball->ySpeed * ogDir < 0) {
     ball->ySpeed *= -1;
   }
