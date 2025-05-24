@@ -10,6 +10,7 @@
 typedef struct {
   float left;
   float top;
+  bool AIEnabled;
 } Paddle;
 
 // Prototypes

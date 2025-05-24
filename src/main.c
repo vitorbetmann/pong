@@ -1,4 +1,5 @@
 #include "Ball.h"
+#include "Paddle.h"
 #include "Player.h"
 #include "Settings.h"
 #include <math.h>
@@ -19,11 +20,13 @@ RenderTexture2D vScreen;
 Font font;
 float dt;
 bool canDrawFPS = false;
-Color const BACKGROUND = {40, 45, 52, 255};
+const Color BACKGROUND = {40, 45, 52, 255};
 const char *const SERVING_TEXT =
     "\t\tPlayer %c's serve!\nPress Enter to serve!";
 const char *const GAMEOVER_TEXT =
     "\t\t\tPlayer %c WON!\nPress Enter to restart!";
+const char *const PAUSE_TEXT = "Game Paused";
+float lastDelta;
 Player servingPlayer, winner;
 bool hasScored;
 Sound paddleHit, score, wallHit;
@@ -48,6 +51,9 @@ void GreetingDraw();
 void DrawOnWindow();
 void GameUnload();
 
+void AIMovePaddle(Player *player);
+void ToggleAI(Player *player);
+
 // Main
 int main(void) {
   GameInit();
@@ -65,7 +71,7 @@ void GameInit() {
   font = LoadFont("../assets/pong_font.ttf");
   SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
   HideCursor();
-  SetTargetFPS(TARGET_FPS);
+  // SetTargetFPS(TARGET_FPS);
   SetRandomSeed(time(NULL));
 
   InitAudioDevice();
@@ -86,60 +92,6 @@ void GameRun() {
     CheckChangeGameState();
     UpdateAll();
     DrawAll();
-  }
-}
-
-void UpdateAll() {
-  dt = GetFrameTime();
-  CheckToggleFPS();
-  if (IsKeyPressed(KEY_F)) {
-    ToggleFullscreen();
-  }
-
-  switch (gameState) {
-  case START:
-  case PAUSE:
-  case SERVE:
-    break;
-  case PLAY:
-    BallUpdate(&ball, dt);
-
-    if (hasCollided(player1.paddle)) {
-      ball.left = player1.paddle.left + PADDLE_WIDTH;
-      BallInvertXSpeed(&ball);
-      PlaySound(paddleHit);
-    } else if (hasCollided(player2.paddle)) {
-      ball.left = player2.paddle.left - BALLSIZE;
-      BallInvertXSpeed(&ball);
-      PlaySound(paddleHit);
-    }
-
-    hasScored = false;
-    if (ball.left > V_WIDTH) {
-      Score(&player1);
-      hasScored = true;
-      PlaySound(score);
-
-    } else if (ball.left + BALLSIZE < 0) {
-      Score(&player2);
-      hasScored = true;
-      PlaySound(score);
-    }
-
-    if (IsKeyDown(KEY_W)) {
-      PaddleMoveUp(&player1.paddle, dt);
-    } else if (IsKeyDown(KEY_S)) {
-      PaddleMoveDown(&player1.paddle, dt);
-    }
-    if (IsKeyDown(KEY_UP)) {
-      PaddleMoveUp(&player2.paddle, dt);
-    } else if (IsKeyDown(KEY_DOWN)) {
-      PaddleMoveDown(&player2.paddle, dt);
-    }
-
-    break;
-  case GAMEOVER:
-    break;
   }
 }
 
@@ -189,6 +141,91 @@ void CheckChangeGameState() {
       gameState = SERVE;
     }
   }
+}
+
+void UpdateAll() {
+  dt = GetFrameTime();
+  CheckToggleFPS();
+  if (IsKeyPressed(KEY_F)) {
+    ToggleFullscreen();
+  }
+
+  switch (gameState) {
+  case START:
+  case PAUSE:
+  case SERVE:
+    break;
+  case PLAY:
+    BallUpdate(&ball, dt);
+
+    if (hasCollided(player1.paddle)) {
+      ball.left = player1.paddle.left + PADDLE_WIDTH;
+      BallInvertXSpeed(&ball);
+      PlaySound(paddleHit);
+    } else if (hasCollided(player2.paddle)) {
+      ball.left = player2.paddle.left - BALLSIZE;
+      BallInvertXSpeed(&ball);
+      PlaySound(paddleHit);
+    }
+
+    hasScored = false;
+    if (ball.left > V_WIDTH) {
+      Score(&player1);
+      hasScored = true;
+      PlaySound(score);
+
+    } else if (ball.left + BALLSIZE < 0) {
+      Score(&player2);
+      hasScored = true;
+      PlaySound(score);
+    }
+
+    if (player1.paddle.AIEnabled) {
+      AIMovePaddle(&player1);
+    } else if (IsKeyDown(KEY_W)) {
+      PaddleMoveUp(&player1.paddle, dt);
+    } else if (IsKeyDown(KEY_S)) {
+      PaddleMoveDown(&player1.paddle, dt);
+    }
+    if (player2.paddle.AIEnabled) {
+      AIMovePaddle(&player2);
+    } else if (IsKeyDown(KEY_UP)) {
+      PaddleMoveUp(&player2.paddle, dt);
+    } else if (IsKeyDown(KEY_DOWN)) {
+      PaddleMoveDown(&player2.paddle, dt);
+    }
+
+    if (IsKeyPressed(KEY_ONE)) {
+      ToggleAI(&player1);
+    }
+    if (IsKeyPressed(KEY_TWO)) {
+      ToggleAI(&player2);
+    }
+
+    break;
+  case GAMEOVER:
+    break;
+  }
+}
+
+void AIMovePaddle(Player *player) {
+  Paddle *paddle = &(player->paddle);
+  if (player->number == '1' && ball.xSpeed > 0) {
+    return;
+  }
+  if (player->number == '2' && ball.xSpeed < 0) {
+    return;
+  }
+  lastDelta = ball.left - paddle->left;
+  if (ball.top + BALLSIZE / 2.0 > paddle->top + PADDLE_HEIGHT / 2.0) {
+    PaddleMoveDown(paddle, dt);
+  } else {
+    PaddleMoveUp(paddle, dt);
+  }
+}
+
+void ToggleAI(Player *player) {
+  player->paddle.AIEnabled = !player->paddle.AIEnabled;
 }
 
 void SetServingPlayer() {
@@ -285,11 +322,10 @@ void GameOverDraw() {
 }
 
 void PauseDraw() {
-  char *pauseText = "Game Paused";
-  Vector2 textSize = MeasureTextEx(font, pauseText, GREETING_FONTSIZE, 2);
+  Vector2 textSize = MeasureTextEx(font, PAUSE_TEXT, GREETING_FONTSIZE, 2);
   Vector2 textPosition =
       (Vector2){(V_WIDTH - textSize.x) / 2, (V_HEIGHT - textSize.y) * 0.06f};
-  DrawTextEx(font, pauseText, textPosition, GREETING_FONTSIZE, 2, WHITE);
+  DrawTextEx(font, PAUSE_TEXT, textPosition, GREETING_FONTSIZE, 2, WHITE);
 }
 
 void DrawOnWindow() {
