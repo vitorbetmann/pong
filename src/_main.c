@@ -14,22 +14,21 @@ typedef enum { START, SERVE, PLAY, PAUSE, GAMEOVER } GameState;
 
 // Variables
 Player player1, player2;
-GameState gameState;
 Ball ball;
 RenderTexture2D vScreen;
 Font font;
 float dt;
 bool canDrawFPS = false;
 const Color BACKGROUND = {40, 45, 52, 255};
-const char *const SERVING_TEXT =
+static const char SERVING_TEXT[] =
     "\t\tPlayer %c's serve!\nPress Enter to serve!";
-const char *const GAMEOVER_TEXT =
+static const char GAMEOVER_TEXT[] =
     "\t\t\tPlayer %c WON!\nPress Enter to restart!";
-const char *const PAUSE_TEXT = "Game Paused";
-float lastDelta;
+static const char PAUSE_TEXT[] = "Game Paused";
 Player servingPlayer, winner;
 bool hasScored;
 Sound paddleHit, score, wallHit;
+GameState gameState;
 
 // Prototypes
 void GameInit();
@@ -71,7 +70,7 @@ void GameInit() {
   font = LoadFont("../assets/pong_font.ttf");
   SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
   HideCursor();
-  // SetTargetFPS(TARGET_FPS);
+  SetTargetFPS(TARGET_FPS);
   SetRandomSeed(time(NULL));
 
   InitAudioDevice();
@@ -216,7 +215,11 @@ void AIMovePaddle(Player *player) {
   if (player->number == '2' && ball.xSpeed < 0) {
     return;
   }
-  lastDelta = ball.left - paddle->left;
+  if (ball.top > paddle->top + PADDLE_HEIGHT / 4.0 &&
+      ball.top + BALLSIZE < paddle->top + 3.0 * PADDLE_HEIGHT / 4.0) {
+    return;
+  }
+
   if (ball.top + BALLSIZE / 2.0 > paddle->top + PADDLE_HEIGHT / 2.0) {
     PaddleMoveDown(paddle, dt);
   } else {
@@ -304,7 +307,7 @@ void GreetingDraw() {
 }
 
 void ServingDraw() {
-  char buffer[strlen(SERVING_TEXT) + 1];
+  char buffer[sizeof(SERVING_TEXT)];
   snprintf(buffer, sizeof(buffer), SERVING_TEXT, servingPlayer.number);
   Vector2 textSize = MeasureTextEx(font, buffer, GREETING_FONTSIZE, 2);
   Vector2 textPosition =
@@ -313,7 +316,7 @@ void ServingDraw() {
 }
 
 void GameOverDraw() {
-  char buffer[strlen(GAMEOVER_TEXT)];
+  char buffer[sizeof(GAMEOVER_TEXT)];
   snprintf(buffer, sizeof(buffer), GAMEOVER_TEXT, winner.number);
   Vector2 textSize = MeasureTextEx(font, buffer, GREETING_FONTSIZE, 2);
   Vector2 textPosition =

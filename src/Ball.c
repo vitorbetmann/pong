@@ -3,7 +3,7 @@
 #include <raylib.h>
 
 Ball NewBall() {
-  Ball newBall;
+  Ball newBall = {0};
   BallSetXSpeedRandom(&newBall);
   BallReset(&newBall);
   return newBall;
