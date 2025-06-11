@@ -18,6 +18,6 @@ Play it online: https://vitorbetmann.itch.io/pong
 
 **Highlights:**
 
-1. Created a python script to generate .cmake file with a list of .c files that's passed in to CMakeLists.txt for setting sources for the executable.
+1. Created a Python script that generates a .cmake file containing a list of .c source files, which is then included in CMakeLists.txt to set the sources for the executable.
 
 2. Got (much) better at reading documentation.
