@@ -1,11 +1,12 @@
 A Pong Clone made for learning purposes. Made in C with Raylib.
 
-
-
-Itch: https://vitorbetmann.itch.io/pong  
 <br/>
 
-Learning outcomes:
+Itch: https://vitorbetmann.itch.io/pong
+
+<br/>
+
+**Learning outcomes:**
 
 • C: Pointers; Memory Manipulation; Enums; Structs
 
@@ -13,9 +14,9 @@ Learning outcomes:
 
 • Tools: Basics of Raylib; A lot about CMake and using the command-line; Some shell scripting; 
 
+<br/>
 
-
-Highlights:
+**Highlights:**
 
 1. Created a python script to generate .cmake file with a list of .c files that's passed in to CMakeLists.txt for setting sources for the executable.
 
