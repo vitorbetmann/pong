@@ -1,4 +1,10 @@
-A Pong Clone made for learning purposes. Made in C with Raylib.
+**Disclaimers:**
+
+• A Flappy Bird Clone made for learning
+
+• Made in C with Raylib.
+
+• Assets from CS50's Introduction to Game Development.
 
 <br/>
 
