@@ -1,6 +1,6 @@
 **Disclaimers:**
 
-• A Flappy Bird Clone made for learning
+• A Pong Clone made for learning
 
 • Made in C with Raylib.
 
